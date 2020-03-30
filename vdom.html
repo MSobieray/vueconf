@@ -1,0 +1,126 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <!-- <script src=https://unpkg.com/vue@next"></script> -->
+    <style>
+      .red {
+        color: red;
+      }
+      .green {
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script>
+      function h(tag, props, children) {
+        return { tag, props, children };
+      }
+
+      function mount(vnode, container, anchor) {
+        const el = document.createElement(vnode.tag);
+        vnode.el = el;
+        // props
+        if (vnode.props) {
+          for (const key in vnode.props) {
+            el.setAttribute(key, vnode.props[key]);
+          }
+        }
+        if (vnode.children) {
+          if (typeof vnode.children === "string") {
+            el.textContent = vnode.children;
+          } else {
+            vnode.children.forEach(child => {
+              mount(child, el);
+            });
+          }
+        }
+        if (anchor) {
+          container.insertBefore(el, anchor);
+        } else {
+          container.appendChild(el);
+        }
+      }
+
+      const tree1 = h("div", { class: "red" }, [
+        h("span", null, "hello"),
+        h("span", null, "world")
+      ]);
+
+      mount(tree1, document.querySelector("#app"));
+
+      function patch(n1, n2) {
+        // Implement this
+        // 1. check if n1 and n2 are of the same type
+        if (n1.tag !== n2.tag) {
+          // 2. if not, replace
+          const parent = n1.el.parentNode;
+          const anchor = n1.el.nextSibling;
+          parent.removeChild(n1.el);
+          mount(n2, parent, anchor);
+          return;
+        }
+
+        const el = (n2.el = n1.el);
+
+        // 3. if yes
+        // 3.1 diff props
+        const oldProps = n1.props || {};
+        const newProps = n2.props || {};
+        for (const key in newProps) {
+          const newValue = newProps[key];
+          const oldValue = oldProps[key];
+          if (newValue !== oldValue) {
+            if (newValue != null) {
+              el.setAttribute(key, newValue);
+            } else {
+              el.removeAttribute(key);
+            }
+          }
+        }
+        for (const key in oldProps) {
+          if (!(key in newProps)) {
+            el.removeAttribute(key);
+          }
+        }
+        // 3.2 diff children
+        const oc = n1.children;
+        const nc = n2.children;
+        if (typeof nc === "string") {
+          if (nc !== oc) {
+            el.textContent = nc;
+          }
+        } else if (Array.isArray(nc)) {
+          if (Array.isArray(oc)) {
+            // array diff
+            const commonLength = Math.min(oc.length, nc.length);
+            for (let i = 0; i < commonLength; i++) {
+              patch(oc[i], nc[i]);
+            }
+            if (nc.length > oc.length) {
+              nc.slice(oc.length).forEach(c => mount(c, el));
+            } else if (oc.length > nc.length) {
+              oc.slice(nc.length).forEach(c => {
+                el.removeChild(c.el);
+              });
+            }
+          } else {
+            el.innerHTML = "";
+            nc.forEach(c => mount(c, el));
+          }
+        }
+      }
+
+      const tree2 = h("div", { class: "green" }, [
+        h("span", null, "this has "),
+        h("span", null, "changed")
+      ]);
+
+      patch(tree1, tree2);
+    </script>
+  </body>
+</html>

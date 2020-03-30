@@ -1,0 +1,32 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://unpkg.com/vue@next"></script>
+  </head>
+  <body>
+    <div id="app" @mousemove="trackMouse">
+      {{ x }} {{ y }}
+    </div>
+
+    <script>
+      Vue.createApp({
+        data: () => ({
+          x: 0,
+          y: 0
+        }),
+        mounted() {
+          window.addEventListener("mousemove", e => {
+            (this.y = e.pageY), (this.x = e.pageX);
+          });
+        },
+        methods: {
+          trackMouse(event) {
+            console.log(event);
+          }
+        }
+      }).mount("#app");
+    </script>
+  </body>
+</html>

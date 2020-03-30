@@ -1,0 +1,56 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+      let target = null,
+        data = { price: 10, quantity: 1 };
+
+      function watchEffect(effect) {
+        target = effect;
+        effect();
+        target = null;
+      }
+
+      class Dep {
+        constructor() {
+          this.subscribers = new Set();
+        }
+        depend() {
+          if (target) {
+            this.subscribers.add(target);
+          }
+        }
+        notify() {
+          this.subscribers.forEach(sub => sub());
+        }
+      }
+
+      function reactive(raw) {
+        Object.keys(data).forEach(key => {
+          let internalValue = data[key];
+          const dep = new Dep();
+          Object.defineProperty(data, key, {
+            get() {
+              dep.depend();
+              return internalValue;
+            },
+            set(newVal) {
+              internalValue = newVal;
+              dep.notify();
+            }
+          });
+        });
+      }
+      reactive(data);
+      watchEffect(() => {
+        data.total = data.price * data.quantity;
+        document.querySelector("#app").textContent = data.total;
+      });
+    </script>
+  </body>
+</html>
