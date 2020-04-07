@@ -70,6 +70,6 @@ Custom Compiler API
 Contributions
 
 - Test Coverage
-- Read .gitlab --> contributions.md
+- Read github --> contributions.md
 - Watch the RFC repo and provide feedback
 - Provide help with community questions
