@@ -6,48 +6,69 @@
     <script src="https://unpkg.com/vue@next"></script>
   </head>
   <body>
-    <div id="app">
-      <div v-if="isPending">loading...</div>
-      <div v-else-if="data">{{ data }}</div>
-      <div v-else-if="error">Error: {{ error.msg }}</div>
-    </div>
+    <div id="app"></div>
     <script>
-      const { ref } = Vue;
-      function useFetch(url) {
-        let data = ref(null);
-        let isPending = ref(false);
-        let error = ref(null);
-        fetch(url)
-          .then(res => res.json())
-          .then(rawData => {
-            data.value = rawData;
-          })
-          .catch(err => {
-            error = err;
-          });
+      const { ref, watchEffect } = Vue
+
+      function useFetch(getUrl) {
+        const data = ref()
+        const isPending = ref(true)
+        const error = ref()
+
+        watchEffect(() => {
+          isPending.value = true
+          error.value = null
+          data.value = null
+          fetch(getUrl())
+            .then(res => res.json())
+            .then(rawData => {
+              data.value = rawData
+              isPending.value = false
+            })
+            .catch(err => {
+              error.value = err
+              isPending.value = false
+            })
+        })
+
         return {
           data,
           isPending,
           error
-        };
+        }
       }
 
-      const App = {
+      const Post = {
+        template: `
+        <div v-if="isPending">loading...</div>
+        <div v-else-if="data">{{ data }}</div>
+        <div v-else-if="error">Error: {{ error.message }}</div>
+        `,
         setup(props) {
-          const { data, isPending, error } = useFetch(
-            `https://jsonplaceholder.typicode.com/posts/1`
-          );
-          console.log(data, isPending, error);
+          const {data, isPending, error} = useFetch(() => `https://jsonplaceholder.typicode.com/posts/${props.id}`)
 
           return {
             data,
             isPending,
             error
-          };
+          }
         }
-      };
+      }
 
-      Vue.createApp(App).mount("#app");
+      const App = {
+        components: { Post },
+        data() {
+          return {
+            id: 1
+          }
+        },
+        template: `
+          <button @click="id++">change id</button>
+          <Post :id="id" />
+        `
+      }
+
+      Vue.createApp(App).mount('#app')
     </script>
   </body>
 </html>
